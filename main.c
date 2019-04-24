@@ -30,12 +30,14 @@
 /* Including needed modules to compile this module/procedure */
 #include "Cpu.h"
 #include "Events.h"
-#include "Bits2.h"
 #include "AD1.h"
 #include "AS1.h"
-#include "Bits1.h"
 #include "TI1.h"
 #include "Bit1.h"
+#include "Bit2.h"
+#include "Bit3.h"
+#include "Bits1.h"
+#include "Bits2.h"
 /* Include shared modules, which are used for whole project */
 #include "PE_Types.h"
 #include "PE_Error.h"
@@ -53,14 +55,29 @@ char flag;
 
 void Empaquetado()
 {
-	
+	char aux[1];
+    
 	blocks[0] = PSB[0]<<2;
 	blocks[0] = blocks[0] & 0b111100;
 	blocks[0] = blocks[0] | (PSB[1]>>6);
 	blocks[0] = blocks[0] | 0b10000000;
 	
+	if (Bit1_GetVal() == 1)
+		aux[0] = 0b1000000;
+	else
+		aux[0] = 0b0;
+	
+	blocks[0] = blocks[0] | aux[0];
+	
 	blocks[1] = PSB[1] & 0b111111;
 
+	if (Bit2_GetVal() == 1)
+		aux[0] = 0b1000000;
+	else
+		aux[0] = 0b0;
+	
+	blocks[1] = blocks[1] | aux[0];
+	
 	blocks[2] = PSB[2]<<2;
 	blocks[2] = blocks[2] & 0b111100;
 	blocks[2] = blocks[2] | (PSB[3]>>6);
@@ -84,7 +101,8 @@ void main(void)
 
 	 if(flag == 1)
 	  {
-		AD1_Measure(1);
+  
+	    AD1_Measure(1);
 		AD1_GetValue(adc);
 			
 		PSB[0] = adc[0];
@@ -93,16 +111,9 @@ void main(void)
 		PSB[3] = adc[3];
 		 
 	    Empaquetado();
-		//  blocks[0] = 0b10101111;  // 175
-		//  blocks[1] = 0b00101010;  //  42
-		//  blocks[2] = 0b00001010;  //  10
-		//  blocks[3] = 0b00000010;  //   2
-		  
-		//  do {
+
 			AS1_SendBlock(blocks, 4, &DirSB);  // error =
-		//	} while (error != ERR_OK);
-			//error = 0;
-			Bit1_NegVal();
+			Bit3_NegVal();
 			flag = 0;	  
 	  }
 		
